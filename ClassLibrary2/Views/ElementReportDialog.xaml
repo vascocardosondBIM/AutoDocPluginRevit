@@ -1,0 +1,71 @@
+<Window x:Class="AutoDocumentation.Views.ElementReportDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Relatório"
+        Width="440"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#FF1C1C1E"
+        Foreground="#FFF2F2F7"
+        ShowInTaskbar="False">
+  <Grid Margin="18">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Grid.Row="0"
+               TextWrapping="Wrap"
+               Foreground="#FFAEAEB2"
+               FontSize="12"
+               Text="O texto é gravado no parâmetro «Relatorio do Elemento» (instância) para os elementos seleccionados nesta janela do assistente." />
+
+    <TextBlock Grid.Row="1"
+               Margin="0,14,0,0"
+               Text="Notas adicionais (opcional)"
+               Foreground="#FFAEAEB2"
+               FontSize="12" />
+    <TextBox Grid.Row="2"
+             x:Name="UserNotesTextBox"
+             Margin="0,6,0,16"
+             MinLines="3"
+             MaxLines="6"
+             MaxHeight="100"
+             TextWrapping="Wrap"
+             AcceptsReturn="True"
+             VerticalScrollBarVisibility="Auto"
+             Padding="10,8"
+             FontSize="12"
+             Background="#FF2C2C2E"
+             Foreground="#FFF2F2F7"
+             BorderBrush="#FF48484A"
+             CaretBrush="#FFF2F2F7" />
+
+    <StackPanel Grid.Row="3"
+                Orientation="Horizontal"
+                HorizontalAlignment="Right">
+      <Button MinWidth="96"
+              Height="34"
+              Margin="0,0,10,0"
+              Padding="12,0"
+              Background="#FF3A3A3C"
+              Foreground="#FFF2F2F7"
+              BorderThickness="0"
+              IsCancel="True"
+              Click="Cancel_Click"
+              Content="Cancelar" />
+      <Button MinWidth="140"
+              Height="34"
+              Padding="12,0"
+              Background="#FF0A84FF"
+              Foreground="White"
+              BorderThickness="0"
+              FontWeight="SemiBold"
+              Click="Ok_Click"
+              Content="Gravar" />
+    </StackPanel>
+  </Grid>
+</Window>

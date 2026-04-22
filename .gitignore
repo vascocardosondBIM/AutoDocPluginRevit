@@ -1,0 +1,64 @@
+## Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]uild/
+[Oo]ut/
+msbuild.binlog
+*.log
+
+## Pasta de compilação / cópia local do add-in (se existir)
+_compile_out/
+
+## Visual Studio / MSBuild
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+Generated\ Files/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+
+## JetBrains Rider
+.idea/
+*.sln.iml
+
+## Testes
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+## OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## Certificados / segredos locais
+*.pfx
+*.p12
+secrets.json
+*.local.json
+
+## Opcional: descomente se não quiser versionar configurações da IDE
+# .vscode/
+# .cursor/

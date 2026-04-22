@@ -1,0 +1,342 @@
+<Window x:Class="AutoDocumentation.Views.TeamParametersEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Assistente de parâmetros"
+        Width="800"
+        Height="480"
+        MinHeight="360"
+        MinWidth="740"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        Background="#FF1C1C1E"
+        Foreground="#FFF2F2F7"
+        TextOptions.TextFormattingMode="Display">
+  <Window.Resources>
+    <Style x:Key="AssistantSecondaryButtonStyle" TargetType="Button">
+      <Setter Property="Background" Value="#FF3A3A3C" />
+      <Setter Property="Foreground" Value="#FFF2F2F7" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Chrome"
+                    Background="{TemplateBinding Background}"
+                    BorderThickness="0"
+                    Padding="{TemplateBinding Padding}"
+                    SnapsToDevicePixels="True">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Chrome" Property="Background" Value="#FF252528" />
+                <Setter Property="Foreground" Value="#FF8E8E93" />
+                <Setter Property="Cursor" Value="Arrow" />
+              </Trigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True" />
+                  <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Chrome" Property="Background" Value="#FF48484A" />
+              </MultiTrigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True" />
+                  <Condition Property="IsPressed" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Chrome" Property="Background" Value="#FF555558" />
+              </MultiTrigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="AssistantDangerButtonStyle" TargetType="Button">
+      <Setter Property="Background" Value="#FF4A2828" />
+      <Setter Property="Foreground" Value="#FFF2F2F7" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Chrome"
+                    Background="{TemplateBinding Background}"
+                    BorderThickness="0"
+                    Padding="{TemplateBinding Padding}"
+                    SnapsToDevicePixels="True">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Chrome" Property="Background" Value="#FF2A2424" />
+                <Setter Property="Foreground" Value="#FF8E8E93" />
+                <Setter Property="Cursor" Value="Arrow" />
+              </Trigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True" />
+                  <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Chrome" Property="Background" Value="#FF5A3232" />
+              </MultiTrigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True" />
+                  <Condition Property="IsPressed" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Chrome" Property="Background" Value="#FF6A3838" />
+              </MultiTrigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="AssistantPrimaryButtonStyle" TargetType="Button">
+      <Setter Property="Background" Value="#FF0A84FF" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Chrome"
+                    Background="{TemplateBinding Background}"
+                    BorderThickness="0"
+                    Padding="{TemplateBinding Padding}"
+                    SnapsToDevicePixels="True">
+              <ContentPresenter HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                RecognizesAccessKey="True"
+                                TextElement.Foreground="{TemplateBinding Foreground}" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsEnabled" Value="False">
+                <Setter TargetName="Chrome" Property="Background" Value="#FF1C4A7A" />
+                <Setter Property="Foreground" Value="#FF8E8E93" />
+                <Setter Property="Cursor" Value="Arrow" />
+              </Trigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True" />
+                  <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Chrome" Property="Background" Value="#FF2A8CFF" />
+              </MultiTrigger>
+              <MultiTrigger>
+                <MultiTrigger.Conditions>
+                  <Condition Property="IsEnabled" Value="True" />
+                  <Condition Property="IsPressed" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter TargetName="Chrome" Property="Background" Value="#FF0870E0" />
+              </MultiTrigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </Window.Resources>
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <TextBlock Grid.Row="0"
+               Text="Parâmetros no projecto — grupo «ParametrosEquipa»"
+               FontSize="16"
+               FontWeight="SemiBold" />
+
+    <TextBlock Grid.Row="1"
+               Margin="0,8,0,10"
+               TextWrapping="Wrap"
+               Foreground="#FFAEAEB2"
+               FontSize="12"
+               x:Name="SelectionSummaryText" />
+
+    <DataGrid Grid.Row="2"
+              x:Name="ParametersDataGrid"
+              SelectionChanged="ParametersDataGrid_SelectionChanged"
+              ItemsSource="{Binding Rows}"
+              AutoGenerateColumns="False"
+              CanUserAddRows="False"
+              CanUserDeleteRows="False"
+              HeadersVisibility="Column"
+              SelectionMode="Single"
+              GridLinesVisibility="Horizontal"
+              RowHeight="32"
+              Background="#FF2C2C2E"
+              Foreground="#FFF2F2F7"
+              RowBackground="#FF2C2C2E"
+              AlternatingRowBackground="#FF252528"
+              BorderBrush="#FF48484A"
+              HorizontalGridLinesBrush="#FF48484A">
+      <DataGrid.Resources>
+        <!-- Texto nas células (modo leitura) -->
+        <Style x:Key="DarkDataGridTextBlockStyle" TargetType="TextBlock">
+          <Setter Property="Foreground" Value="#FFF2F2F7" />
+          <Setter Property="Background" Value="Transparent" />
+          <Setter Property="Padding" Value="6,4" />
+          <Setter Property="VerticalAlignment" Value="Center" />
+          <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+        <!-- Edição: TextBox por defeito vem branco no tema do sistema -->
+        <Style x:Key="DarkDataGridTextBoxStyle" TargetType="TextBox">
+          <Setter Property="Foreground" Value="#FFF2F2F7" />
+          <Setter Property="Background" Value="#FF1C1C1E" />
+          <Setter Property="BorderBrush" Value="#FF48484A" />
+          <Setter Property="CaretBrush" Value="#FFF2F2F7" />
+          <Setter Property="Padding" Value="6,4" />
+          <Setter Property="SelectionBrush" Value="#FF0A84FF" />
+        </Style>
+      </DataGrid.Resources>
+      <DataGrid.ColumnHeaderStyle>
+        <Style TargetType="DataGridColumnHeader">
+          <Setter Property="Background" Value="#FF3A3A3C" />
+          <Setter Property="Foreground" Value="#FFF2F2F7" />
+          <Setter Property="Padding" Value="10,8" />
+          <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+      </DataGrid.ColumnHeaderStyle>
+      <DataGrid.RowStyle>
+        <Style TargetType="DataGridRow">
+          <Setter Property="Background" Value="#FF2C2C2E" />
+          <Setter Property="Foreground" Value="#FFF2F2F7" />
+          <Style.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+              <Setter Property="Background" Value="#FF244060" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter Property="Background" Value="#FF343436" />
+            </Trigger>
+          </Style.Triggers>
+        </Style>
+      </DataGrid.RowStyle>
+      <!-- Template próprio: o template por defeito pinta células só de leitura a cinza-claro com texto claro. -->
+      <DataGrid.CellStyle>
+        <Style TargetType="DataGridCell">
+          <Setter Property="Background" Value="#FF2C2C2E" />
+          <Setter Property="Foreground" Value="#FFF2F2F7" />
+          <Setter Property="BorderBrush" Value="#FF48484A" />
+          <Setter Property="BorderThickness" Value="0" />
+          <Setter Property="Padding" Value="2" />
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="DataGridCell">
+                <Border x:Name="CellBorder"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        Padding="{TemplateBinding Padding}"
+                        SnapsToDevicePixels="True">
+                  <ContentPresenter VerticalAlignment="Center"
+                                    SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                </Border>
+                <ControlTemplate.Triggers>
+                  <Trigger Property="IsSelected" Value="True">
+                    <Setter TargetName="CellBorder" Property="Background" Value="#FF244060" />
+                  </Trigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Style>
+      </DataGrid.CellStyle>
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Nome do parâmetro"
+                            Binding="{Binding ParameterName}"
+                            Width="2*"
+                            IsReadOnly="True"
+                            ElementStyle="{StaticResource DarkDataGridTextBlockStyle}" />
+        <DataGridTextColumn Header="Tipo de dados"
+                            Binding="{Binding KindDisplay}"
+                            Width="*"
+                            IsReadOnly="True"
+                            ElementStyle="{StaticResource DarkDataGridTextBlockStyle}" />
+        <DataGridTextColumn Header="Valor (selecção)"
+                            Binding="{Binding ValueText, UpdateSourceTrigger=PropertyChanged}"
+                            Width="2*"
+                            IsReadOnly="False"
+                            ElementStyle="{StaticResource DarkDataGridTextBlockStyle}"
+                            EditingElementStyle="{StaticResource DarkDataGridTextBoxStyle}" />
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <Grid Grid.Row="3"
+          Margin="0,14,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <WrapPanel Grid.Column="0"
+                 Orientation="Horizontal"
+                 VerticalAlignment="Center">
+        <Button x:Name="CreateParameterButton"
+                MinWidth="120"
+                Height="34"
+                Margin="0,0,10,8"
+                Padding="12,0"
+                Style="{StaticResource AssistantSecondaryButtonStyle}"
+                Click="CreateParameterButton_Click"
+                Content="Novo parâmetro" />
+        <Button x:Name="ReportButton"
+                MinWidth="100"
+                Height="34"
+                Margin="0,0,10,8"
+                Padding="12,0"
+                Style="{StaticResource AssistantSecondaryButtonStyle}"
+                Click="ReportButton_Click"
+                Content="Relatório" />
+        <Button x:Name="EditParameterButton"
+                MinWidth="88"
+                Height="34"
+                Margin="0,0,10,8"
+                Padding="12,0"
+                Style="{StaticResource AssistantSecondaryButtonStyle}"
+                IsEnabled="False"
+                Click="EditParameterButton_Click"
+                Content="Editar" />
+        <Button x:Name="DeleteParameterButton"
+                MinWidth="96"
+                Height="34"
+                Margin="0,0,10,8"
+                Padding="12,0"
+                Style="{StaticResource AssistantDangerButtonStyle}"
+                IsEnabled="False"
+                Click="DeleteParameterButton_Click"
+                Content="Eliminar" />
+      </WrapPanel>
+      <StackPanel Grid.Column="1"
+                  Orientation="Horizontal"
+                  VerticalAlignment="Center">
+        <Button x:Name="ApplyButton"
+                MinWidth="96"
+                Height="34"
+                Margin="0,0,10,0"
+                Padding="12,0"
+                Style="{StaticResource AssistantPrimaryButtonStyle}"
+                Click="ApplyButton_Click"
+                Content="Aplicar" />
+        <Button x:Name="CloseButton"
+                MinWidth="88"
+                Height="34"
+                Padding="12,0"
+                Style="{StaticResource AssistantSecondaryButtonStyle}"
+                Click="CloseButton_Click"
+                Content="Fechar" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>
