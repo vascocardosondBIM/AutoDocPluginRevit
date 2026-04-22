@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.Win32;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using AutoDocumentation.Models;
@@ -38,9 +39,10 @@ public partial class TeamParametersEditorWindow : Window
 
     private void UpdateParameterActionButtons()
     {
-        var hasRow = ParametersDataGrid.SelectedItem is TeamParameterRowModel;
-        EditParameterButton.IsEnabled = hasRow;
-        DeleteParameterButton.IsEnabled = hasRow;
+        var count = ParametersDataGrid.SelectedItems.Cast<object>().OfType<TeamParameterRowModel>().Count();
+        EditParameterButton.IsEnabled = count == 1;
+        DeleteParameterButton.IsEnabled = count == 1;
+        ExportParameterPackButton.IsEnabled = count >= 1;
     }
 
     private List<Element> ResolveElements()
@@ -137,6 +139,91 @@ public partial class TeamParametersEditorWindow : Window
             ? $"O parâmetro «{name}» foi associado às categorias dos elementos seleccionados (categorias acrescentadas ao binding no projecto)."
             : $"O parâmetro «{name}» foi criado ou actualizado (mesmo nome e tipo: categorias fundidas) e associado às categorias dos elementos seleccionados.";
         MessageBox.Show(this, doneMsg, "Assistente de parâmetros", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void ExportParameterPackButton_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = ParametersDataGrid.SelectedItems.Cast<object>().OfType<TeamParameterRowModel>().ToList();
+        if (selected.Count == 0)
+        {
+            MessageBox.Show(this, "Seleccione pelo menos um parâmetro na grelha para exportar.", "Exportar JSON",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var names = selected.Select(r => r.ParameterName).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (!TeamParameterPortablePackService.TryBuildPackFromParameterNames(_uidoc.Document, names, out var pack,
+                out var buildError))
+        {
+            MessageBox.Show(this, buildError, "Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var dlg = new SaveFileDialog
+        {
+            Title = "Guardar pacote de parâmetros",
+            Filter = "JSON (*.json)|*.json|Todos os ficheiros (*.*)|*.*",
+            DefaultExt = ".json",
+            AddExtension = true,
+            FileName = "ParametrosEquipa.json"
+        };
+
+        if (dlg.ShowDialog(this) != true)
+            return;
+
+        if (!TeamParameterPortablePackService.TryWritePackToPath(pack, dlg.FileName, out var writeError))
+        {
+            MessageBox.Show(this, writeError, "Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        MessageBox.Show(this,
+            $"Foram exportadas {pack.Definitions.Count} definição(ões) para:\n{dlg.FileName}",
+            "Exportar JSON",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+    }
+
+    private void ImportParameterPackButton_Click(object sender, RoutedEventArgs e)
+    {
+        var elements = ResolveElements();
+        if (elements.Count == 0)
+        {
+            MessageBox.Show(this, "Não há elementos válidos na selecção — não é possível determinar categorias para o binding.",
+                "Importar JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var dlg = new OpenFileDialog
+        {
+            Title = "Carregar pacote de parâmetros",
+            Filter = "JSON (*.json)|*.json|Todos os ficheiros (*.*)|*.*",
+            CheckFileExists = true,
+            Multiselect = false
+        };
+
+        if (dlg.ShowDialog(this) != true)
+            return;
+
+        if (!TeamParameterPortablePackService.TryReadPackFromPath(dlg.FileName, out var pack, out var readError) ||
+            pack is null)
+        {
+            MessageBox.Show(this, readError, "Importar JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (!TeamParameterPortablePackService.TryImportPack(_uidoc.Document, pack, elements, out var summary))
+        {
+            MessageBox.Show(this, summary, "Importar JSON", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        RefreshRows();
+        MessageBox.Show(this,
+            string.IsNullOrWhiteSpace(summary) ? "Importação concluída." : summary,
+            "Importar JSON",
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void ReportButton_Click(object sender, RoutedEventArgs e)

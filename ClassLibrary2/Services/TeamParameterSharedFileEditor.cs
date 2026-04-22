@@ -170,7 +170,7 @@ public static class TeamParameterSharedFileEditor
         return false;
     }
 
-    private static bool TryResolveTeamGroupNumericIdFromLines(IReadOnlyList<string> lines, out string groupId)
+    internal static bool TryResolveTeamGroupNumericIdFromLines(IReadOnlyList<string> lines, out string groupId)
     {
         groupId = string.Empty;
         foreach (var line in lines)
@@ -193,7 +193,7 @@ public static class TeamParameterSharedFileEditor
         return false;
     }
 
-    private static bool ParamLineGroupMatches(string[] parts, string groupId)
+    internal static bool ParamLineGroupMatches(string[] parts, string groupId)
     {
         if (parts.Length > 5 && string.Equals(parts[5].Trim(), groupId, StringComparison.Ordinal))
             return true;
@@ -202,7 +202,7 @@ public static class TeamParameterSharedFileEditor
         return false;
     }
 
-    private static bool TryParseParamLine(string line, out string[] parts)
+    internal static bool TryParseParamLine(string line, out string[] parts)
     {
         parts = Array.Empty<string>();
         var t = line.Trim();
