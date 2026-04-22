@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.IO;
+using System.Text;
 using Autodesk.Revit.DB;
 using AutoDocumentation.Models;
 
@@ -84,6 +86,65 @@ public static class TeamParameterDiscoveryService
         }
 
         return rows;
+    }
+
+    /// <summary>
+    /// Acrescenta ao relatório de documentação os parâmetros de instância «ParametrosEquipa» ligados ao projecto
+    /// e presentes neste elemento (mesmo critério que o assistente de parâmetros).
+    /// </summary>
+    public static void AppendTeamParameterReportSection(Document doc, Element element, StringBuilder sb)
+    {
+        if (element is null)
+            return;
+
+        try
+        {
+            SharedParameterJsonPersistence.EnsureFileExists(doc);
+            var managedNames = GetManagedInstanceBoundParameterNames(doc);
+            if (managedNames.Count == 0)
+                return;
+
+            var entries = new List<(string Name, string Value)>();
+            foreach (var name in managedNames.OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+            {
+                var p = ResolveInstanceParameter(element, name);
+                if (p is null)
+                    continue;
+
+                entries.Add((name, FormatParameterSnapshotForReport(p)));
+            }
+
+            if (entries.Count == 0)
+                return;
+
+            sb.AppendLine();
+            sb.AppendLine($"--- Parâmetros «{TeamParameterConstants.DefinitionGroupName}» (projecto) ---");
+            foreach (var (name, value) in entries)
+                sb.AppendLine($"{name}: {value}");
+        }
+        catch
+        {
+            // Se o ficheiro partilhado ou a API falhar, omite-se a secção em vez de falhar o relatório.
+        }
+    }
+
+    private static string FormatParameterSnapshotForReport(Parameter p)
+    {
+        if (!p.HasValue)
+            return "(vazio)";
+
+        var s = p.StorageType switch
+        {
+            StorageType.String => p.AsString() ?? string.Empty,
+            StorageType.Double => p.AsValueString() ?? p.AsDouble().ToString(CultureInfo.InvariantCulture),
+            StorageType.Integer => p.AsValueString() ?? p.AsInteger().ToString(CultureInfo.CurrentCulture),
+            StorageType.ElementId => p.AsValueString() ?? (p.AsElementId() is { } id && id != ElementId.InvalidElementId
+                ? id.Value.ToString(CultureInfo.CurrentCulture)
+                : string.Empty),
+            _ => string.Empty
+        };
+
+        return string.IsNullOrWhiteSpace(s) ? "(vazio)" : s;
     }
 
     /// <summary>

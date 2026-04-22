@@ -55,6 +55,8 @@ public static class WallDocumentationReportBuilder
         sb.AppendLine("--- Inserções / elementos integrados ---");
         AppendHostedElements(doc, wall, sb);
 
+        TeamParameterDiscoveryService.AppendTeamParameterReportSection(doc, wall, sb);
+
         var notes = userAdditionalNotes.Trim();
         if (notes.Length > 0)
         {

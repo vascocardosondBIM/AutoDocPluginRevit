@@ -44,6 +44,8 @@ public static class ElementDocumentationReportBuilder
         var level = doc.GetElement(room.LevelId) as Level;
         sb.AppendLine($"Nível associado: {level?.Name ?? "(n/d)"}");
 
+        TeamParameterDiscoveryService.AppendTeamParameterReportSection(doc, room, sb);
+
         AppendUserNotes(sb, userAdditionalNotes);
         return Truncate(sb.ToString());
     }
@@ -80,6 +82,8 @@ public static class ElementDocumentationReportBuilder
 
         AppendLocationSummary(doc, element, sb);
         AppendBoundingBoxSummary(doc, element, sb);
+
+        TeamParameterDiscoveryService.AppendTeamParameterReportSection(doc, element, sb);
 
         AppendUserNotes(sb, userAdditionalNotes);
         return Truncate(sb.ToString());
