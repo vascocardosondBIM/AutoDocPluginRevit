@@ -10,6 +10,39 @@ namespace AutoDocumentation.Services;
 /// </summary>
 public static class TeamParameterSharedFileEditor
 {
+    /// <summary>Nome → token de tipo de dados (TEXT, INTEGER, …) para PARAM do grupo «ParametrosEquipa» no JSON.</summary>
+    public static IReadOnlyDictionary<string, string> GetTeamGroupParameterDataTypeTokensByName(Document doc)
+    {
+        SharedParameterJsonPersistence.EnsureFileExists(doc);
+        var lines = SharedParameterJsonPersistence.LoadLines(doc);
+        return GetTeamGroupParameterDataTypeTokensByNameFromLines(lines);
+    }
+
+    internal static IReadOnlyDictionary<string, string> GetTeamGroupParameterDataTypeTokensByNameFromLines(
+        IReadOnlyList<string> lines)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!TryResolveTeamGroupNumericIdFromLines(lines, out var groupId))
+            return dict;
+
+        foreach (var line in lines)
+        {
+            if (!TryParseParamLine(line, out var parts) || parts.Length < 6)
+                continue;
+
+            if (!ParamLineGroupMatches(parts, groupId))
+                continue;
+
+            var name = parts[2].Trim();
+            if (name.Length == 0)
+                continue;
+
+            dict[name] = parts[3].Trim();
+        }
+
+        return dict;
+    }
+
     /// <summary>GUIDs das definições PARAM do grupo «ParametrosEquipa».</summary>
     public static bool TryGetGuidsForTeamParameterParameters(Document doc, out HashSet<Guid> guids)
     {

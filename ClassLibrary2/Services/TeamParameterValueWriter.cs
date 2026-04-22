@@ -43,6 +43,21 @@ public static class TeamParameterValueWriter
                 {
                     if (p.Definition?.GetDataType() == SpecTypeId.Boolean.YesNo)
                     {
+                        // Célula vazia na grelha = manter sem valor (não confundir com «Não»).
+                        if (string.IsNullOrWhiteSpace(text))
+                        {
+                            try
+                            {
+                                p.ClearValue();
+                            }
+                            catch
+                            {
+                                // Revit pode recusar ClearValue; não forçar Set(0) aqui.
+                            }
+
+                            return true;
+                        }
+
                         if (IsTruthy(text))
                         {
                             p.Set(1);
@@ -122,8 +137,7 @@ public static class TeamParameterValueWriter
     private static bool IsFalsy(string t)
     {
         t = t.Trim();
-        return t.Length == 0
-               || t.Equals("0", StringComparison.Ordinal)
+        return t.Equals("0", StringComparison.Ordinal)
                || t.Equals("não", StringComparison.OrdinalIgnoreCase)
                || t.Equals("nao", StringComparison.OrdinalIgnoreCase)
                || t.Equals("n", StringComparison.OrdinalIgnoreCase)

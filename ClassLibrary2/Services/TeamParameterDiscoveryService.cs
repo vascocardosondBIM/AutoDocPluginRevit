@@ -9,6 +9,62 @@ namespace AutoDocumentation.Services;
 /// </summary>
 public static class TeamParameterDiscoveryService
 {
+    /// <summary>
+    /// Parâmetros «ParametrosEquipa» que ainda não estão disponíveis em todos os elementos seleccionados
+    /// (só no ficheiro, ou no projecto mas sem categorias da selecção / sem instância em algum elemento).
+    /// </summary>
+    public static IReadOnlyList<AssociableTeamParameterInfo> GetAssociableTeamParameters(
+        Document doc,
+        IReadOnlyList<Element> elements)
+    {
+        if (elements.Count == 0)
+            return Array.Empty<AssociableTeamParameterInfo>();
+
+        try
+        {
+            SharedParameterJsonPersistence.EnsureFileExists(doc);
+            var fromFile = TeamParameterSharedFileEditor.GetTeamGroupParameterDataTypeTokensByName(doc);
+            var managed = GetManagedInstanceBoundParameterNames(doc);
+            var allNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var n in managed)
+                allNames.Add(n);
+            foreach (var n in fromFile.Keys)
+                allNames.Add(n);
+
+            var result = new List<AssociableTeamParameterInfo>();
+            foreach (var name in allNames.OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+            {
+                if (TryDescribeCommonParameter(elements, name, out _, out _, out _))
+                    continue;
+
+                var kind = ResolveTeamParameterKindForName(doc, name, fromFile);
+                result.Add(new AssociableTeamParameterInfo(name, kind));
+            }
+
+            return result;
+        }
+        catch
+        {
+            return Array.Empty<AssociableTeamParameterInfo>();
+        }
+    }
+
+    private static TeamParameterKind ResolveTeamParameterKindForName(
+        Document doc,
+        string name,
+        IReadOnlyDictionary<string, string> fromFileTokens)
+    {
+        var ext = TeamParameterDefinitionResolver.TryGetBoundTeamParameter(doc, name);
+        if (ext is not null)
+            return TeamParameterKindMapping.MapFromSpecTypeId(ext.GetDataType());
+
+        if (fromFileTokens.TryGetValue(name, out var tok) &&
+            TeamParameterSharedFileKindMapper.TryParseDataTypeToken(tok, out var k))
+            return k;
+
+        return TeamParameterKind.Text;
+    }
+
     public static IReadOnlyList<TeamParameterRowModel> GetCommonEditableRows(Document doc, IReadOnlyList<Element> elements)
     {
         if (elements.Count == 0)

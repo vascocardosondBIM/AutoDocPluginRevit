@@ -26,7 +26,7 @@ public partial class TeamParametersEditorWindow : Window
         {
             SelectionSummaryText.Text =
                 $"{elements.Count} elemento(s) seleccionado(s). " +
-                "Só aparecem parâmetros criados com «Novo parâmetro» (ficheiro partilhado por projecto, grupo «ParametrosEquipa»), ligados ao projecto e presentes em todas as instâncias seleccionadas. " +
+                "Só aparecem parâmetros criados ou associados com «Novo parâmetro» (ficheiro partilhado por projecto, grupo «ParametrosEquipa»), ligados ao projecto e presentes em todas as instâncias seleccionadas. " +
                 "O grupo «Dados» na paleta de propriedades é outro conceito (agrupamento visual no Revit), não este.";
             RefreshRows();
             UpdateParameterActionButtons();
@@ -71,25 +71,51 @@ public partial class TeamParametersEditorWindow : Window
             return;
         }
 
-        var dlg = new CreateTeamParameterDialog { Owner = this };
+        IReadOnlyList<AssociableTeamParameterInfo> associable;
+        CreateTeamParameterDialog dlg;
+        try
+        {
+            associable = TeamParameterDiscoveryService.GetAssociableTeamParameters(_uidoc.Document, elements);
+            dlg = new CreateTeamParameterDialog(associable) { Owner = this };
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this,
+                "Não foi possível preparar o diálogo de parâmetros.\n\n" + ex.Message,
+                "Assistente de parâmetros",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            return;
+        }
+
         if (dlg.ShowDialog() != true)
             return;
 
-        var name = dlg.ParameterName.Trim();
-        var kind = dlg.SelectedKind;
-
-        if (TeamParameterSharedFileEditor.TryGetTeamParameterDataTypeInFile(_uidoc.Document, name, out var existingTok))
+        string name;
+        TeamParameterKind kind;
+        if (dlg.IsAssociateMode && dlg.SelectedAssociable is { } link)
         {
-            if (!TeamParameterSharedFileKindMapper.TokenMatchesKind(existingTok, kind))
+            name = link.Name;
+            kind = link.Kind;
+        }
+        else
+        {
+            name = dlg.ParameterName.Trim();
+            kind = dlg.SelectedKind;
+
+            if (TeamParameterSharedFileEditor.TryGetTeamParameterDataTypeInFile(_uidoc.Document, name, out var existingTok))
             {
-                MessageBox.Show(
-                    this,
-                    $"Já existe no ficheiro partilhado (grupo «{TeamParameterConstants.DefinitionGroupName}») um parâmetro chamado «{name}» com outro tipo de dados. " +
-                    "Use outro nome ou remova a definição antiga no editor de parâmetros partilhados do Revit.",
-                    "Assistente de parâmetros",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
+                if (!TeamParameterSharedFileKindMapper.TokenMatchesKind(existingTok, kind))
+                {
+                    MessageBox.Show(
+                        this,
+                        $"Já existe no ficheiro partilhado (grupo «{TeamParameterConstants.DefinitionGroupName}») um parâmetro chamado «{name}» com outro tipo de dados. " +
+                        "Use outro nome ou remova a definição antiga no editor de parâmetros partilhados do Revit.",
+                        "Assistente de parâmetros",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
             }
         }
 
@@ -107,12 +133,10 @@ public partial class TeamParametersEditorWindow : Window
         }
 
         RefreshRows();
-        MessageBox.Show(
-            this,
-            $"O parâmetro «{name}» foi criado ou actualizado (mesmo nome e tipo: categorias fundidas) e associado às categorias dos elementos seleccionados.",
-            "Assistente de parâmetros",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        var doneMsg = dlg.IsAssociateMode
+            ? $"O parâmetro «{name}» foi associado às categorias dos elementos seleccionados (categorias acrescentadas ao binding no projecto)."
+            : $"O parâmetro «{name}» foi criado ou actualizado (mesmo nome e tipo: categorias fundidas) e associado às categorias dos elementos seleccionados.";
+        MessageBox.Show(this, doneMsg, "Assistente de parâmetros", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void ReportButton_Click(object sender, RoutedEventArgs e)

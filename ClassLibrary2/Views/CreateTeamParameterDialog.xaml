@@ -136,41 +136,70 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <TextBlock Grid.Row="0"
+    <StackPanel Grid.Row="0"
+                Orientation="Horizontal"
+                Margin="0,0,0,12">
+      <RadioButton x:Name="ModeCreateRadio"
+                   Margin="0,0,18,0"
+                   Content="Criar novo"
+                   GroupName="TeamParamCreateMode"
+                   Foreground="#FFF2F2F7"
+                   FontSize="13"
+                   IsChecked="True" />
+      <RadioButton x:Name="ModeAssociateRadio"
+                   Content="Associar existente…"
+                   GroupName="TeamParamCreateMode"
+                   Foreground="#FFF2F2F7"
+                   FontSize="13" />
+    </StackPanel>
+
+    <TextBlock x:Name="PrimaryFieldLabel"
+               Grid.Row="1"
                Text="Nome do parâmetro"
                Foreground="#FFAEAEB2"
                FontSize="12" />
-    <TextBox Grid.Row="1"
-             x:Name="NameTextBox"
-             Margin="0,6,0,14"
-             Padding="10,8"
-             FontSize="13"
-             Background="#FF2C2C2E"
-             Foreground="#FFF2F2F7"
-             BorderBrush="#FF48484A"
-             CaretBrush="#FFF2F2F7" />
+    <Grid Grid.Row="2"
+          Margin="0,6,0,14">
+      <TextBox x:Name="NameTextBox"
+               Padding="10,8"
+               FontSize="13"
+               Background="#FF2C2C2E"
+               Foreground="#FFF2F2F7"
+               BorderBrush="#FF48484A"
+               CaretBrush="#FFF2F2F7" />
+      <ComboBox x:Name="AssociateComboBox"
+                Style="{StaticResource DarkTeamComboBoxStyle}"
+                Visibility="Collapsed"
+                FontSize="13"
+                ItemContainerStyle="{StaticResource DarkComboBoxItemStyle}"
+                MaxDropDownHeight="220" />
+    </Grid>
 
-    <TextBlock Grid.Row="2"
+    <TextBlock x:Name="KindLabel"
+               Grid.Row="3"
                Text="Tipo de dados"
                Foreground="#FFAEAEB2"
                FontSize="12" />
-    <ComboBox Grid.Row="3"
+    <ComboBox Grid.Row="4"
               x:Name="KindComboBox"
               Style="{StaticResource DarkTeamComboBoxStyle}"
               Margin="0,6,0,14"
               FontSize="13"
               ItemContainerStyle="{StaticResource DarkComboBoxItemStyle}" />
 
-    <TextBlock Grid.Row="4"
+    <TextBlock x:Name="HelpTextBlock"
+               Grid.Row="5"
                TextWrapping="Wrap"
                Foreground="#FF8E8E93"
                FontSize="11"
                Margin="0,0,0,14"
                Text="O parâmetro será associado como instância às categorias dos elementos que seleccionou antes de abrir o editor. Comprimento assume metros na grelha." />
 
-    <StackPanel Grid.Row="5"
+    <StackPanel Grid.Row="6"
                 Orientation="Horizontal"
                 HorizontalAlignment="Right">
       <Button MinWidth="96"

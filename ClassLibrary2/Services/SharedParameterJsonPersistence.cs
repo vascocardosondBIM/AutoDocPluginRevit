@@ -14,7 +14,10 @@ public static class SharedParameterJsonPersistence
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
     };
 
     private const string LegacySidecarTxtSuffix = ".AutoDocumentation.shared_parameters.txt";
@@ -83,12 +86,61 @@ public static class SharedParameterJsonPersistence
     {
         EnsureFileExists(doc);
         var jsonPath = SharedParameterPaths.GetSharedParametersJsonPath(doc);
-        var text = File.ReadAllText(jsonPath, Encoding.UTF8);
-        return JsonSerializer.Deserialize<SharedParametersJsonDocument>(text, JsonOptions)
-               ?? CreateMinimalDocument();
+        string text;
+        try
+        {
+            text = File.ReadAllText(jsonPath, Encoding.UTF8);
+        }
+        catch
+        {
+            return CreateMinimalDocument();
+        }
+
+        try
+        {
+            var model = JsonSerializer.Deserialize<SharedParametersJsonDocument>(text, JsonOptions)
+                        ?? CreateMinimalDocument();
+            model.Lines ??= new List<string>();
+            return model;
+        }
+        catch (JsonException)
+        {
+            TryQuarantineCorruptJson(jsonPath);
+            var fresh = CreateMinimalDocument();
+            try
+            {
+                SaveDocument(doc, fresh);
+            }
+            catch
+            {
+                /* ignorar: próxima operação tentará de novo */
+            }
+
+            return fresh;
+        }
     }
 
-    public static List<string> LoadLines(Document doc) => new(LoadDocument(doc).Lines);
+    private static void TryQuarantineCorruptJson(string jsonPath)
+    {
+        try
+        {
+            if (!File.Exists(jsonPath))
+                return;
+
+            var bak = jsonPath + ".invalid." + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".bak";
+            File.Move(jsonPath, bak, overwrite: false);
+        }
+        catch
+        {
+            /* ignorar */
+        }
+    }
+
+    public static List<string> LoadLines(Document doc)
+    {
+        var model = LoadDocument(doc);
+        return model.Lines.Count > 0 ? new List<string>(model.Lines) : new List<string>(CreateMinimalDocument().Lines);
+    }
 
     public static void SaveDocument(Document doc, SharedParametersJsonDocument data)
     {
