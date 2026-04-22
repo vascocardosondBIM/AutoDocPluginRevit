@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="_build/_build.csproj" />
   <Project Path="ClassLibrary2/AutoDocumentation.csproj" />
 </Solution>
