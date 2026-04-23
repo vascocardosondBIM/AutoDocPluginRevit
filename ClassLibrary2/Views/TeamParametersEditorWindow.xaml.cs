@@ -13,25 +13,44 @@ namespace AutoDocumentation.Views;
 public partial class TeamParametersEditorWindow : Window
 {
     private readonly UIDocument _uidoc;
+    private readonly UIApplication _uiApp;
     private readonly List<ElementId> _elementIds;
 
     public ObservableCollection<TeamParameterRowModel> Rows { get; } = new();
 
-    public TeamParametersEditorWindow(UIDocument uidoc, IReadOnlyList<Element> elements)
+    public TeamParametersEditorWindow(UIDocument uidoc, IReadOnlyList<Element> elements, UIApplication uiApp)
     {
         _uidoc = uidoc;
+        _uiApp = uiApp;
         _elementIds = elements.Select(e => e.Id).ToList();
         InitializeComponent();
+        RevitWpfAppearance.Apply(this);
+        RevitWpfAppearance.AttachThemeChanged(_uiApp, this);
+        ApplyLocalizedUi(elements.Count);
         DataContext = this;
         Loaded += (_, _) =>
         {
-            SelectionSummaryText.Text =
-                $"{elements.Count} elemento(s) seleccionado(s). " +
-                "Só aparecem parâmetros criados ou associados com «Novo parâmetro» (ficheiro partilhado por projecto, grupo «ParametrosEquipa»), ligados ao projecto e presentes em todas as instâncias seleccionadas. " +
-                "O grupo «Dados» na paleta de propriedades é outro conceito (agrupamento visual no Revit), não este.";
             RefreshRows();
             UpdateParameterActionButtons();
         };
+    }
+
+    private void ApplyLocalizedUi(int selectionCount)
+    {
+        Title = PluginStrings.T("Editor.Title");
+        HeaderText.Text = PluginStrings.T("Editor.Header");
+        SelectionSummaryText.Text = PluginStrings.Tf("Editor.SelectionSummary", selectionCount);
+        ColParameterName.Header = PluginStrings.T("Editor.Col.ParameterName");
+        ColKind.Header = PluginStrings.T("Editor.Col.DataType");
+        ColValue.Header = PluginStrings.T("Editor.Col.ValueSelection");
+        CreateParameterButton.Content = PluginStrings.T("Editor.Btn.NewParameter");
+        ReportButton.Content = PluginStrings.T("Editor.Btn.Report");
+        ExportParameterPackButton.Content = PluginStrings.T("Editor.Btn.ExportJson");
+        ImportParameterPackButton.Content = PluginStrings.T("Editor.Btn.ImportJson");
+        EditParameterButton.Content = PluginStrings.T("Editor.Btn.Edit");
+        DeleteParameterButton.Content = PluginStrings.T("Editor.Btn.Delete");
+        ApplyButton.Content = PluginStrings.T("Editor.Btn.Apply");
+        CloseButton.Content = PluginStrings.T("Editor.Btn.Close");
     }
 
     private void ParametersDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
@@ -68,8 +87,8 @@ public partial class TeamParametersEditorWindow : Window
         var elements = ResolveElements();
         if (elements.Count == 0)
         {
-            MessageBox.Show(this, "Não há elementos válidos na selecção.", "Assistente de parâmetros", MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            MessageBox.Show(this, PluginStrings.T("Editor.Msg.NoValidElements"), PluginStrings.T("Editor.Title"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -83,8 +102,8 @@ public partial class TeamParametersEditorWindow : Window
         catch (Exception ex)
         {
             MessageBox.Show(this,
-                "Não foi possível preparar o diálogo de parâmetros.\n\n" + ex.Message,
-                "Assistente de parâmetros",
+                PluginStrings.Tf("Editor.Msg.PrepareDialogFailed", ex.Message),
+                PluginStrings.T("Editor.Title"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return;
@@ -111,9 +130,8 @@ public partial class TeamParametersEditorWindow : Window
                 {
                     MessageBox.Show(
                         this,
-                        $"Já existe no ficheiro partilhado (grupo «{TeamParameterConstants.DefinitionGroupName}») um parâmetro chamado «{name}» com outro tipo de dados. " +
-                        "Use outro nome ou remova a definição antiga no editor de parâmetros partilhados do Revit.",
-                        "Assistente de parâmetros",
+                        PluginStrings.Tf("Editor.Msg.SharedFileTypeConflict", name, TeamParameterConstants.DefinitionGroupName),
+                        PluginStrings.T("Editor.Title"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     return;
@@ -123,22 +141,22 @@ public partial class TeamParametersEditorWindow : Window
 
         try
         {
-            using var tx = new Transaction(_uidoc.Document, "Assistente de parâmetros: criar parâmetro");
+            using var tx = new Transaction(_uidoc.Document, PluginStrings.T("Tx.TxCreateParameter"));
             tx.Start();
             TeamParameterBootstrapper.EnsureBoundInstanceParameter(_uidoc.Document, name, kind, elements);
             tx.Commit();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Assistente de parâmetros", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, ex.Message, PluginStrings.T("Editor.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         RefreshRows();
         var doneMsg = dlg.IsAssociateMode
-            ? $"O parâmetro «{name}» foi associado às categorias dos elementos seleccionados (categorias acrescentadas ao binding no projecto)."
-            : $"O parâmetro «{name}» foi criado ou actualizado (mesmo nome e tipo: categorias fundidas) e associado às categorias dos elementos seleccionados.";
-        MessageBox.Show(this, doneMsg, "Assistente de parâmetros", MessageBoxButton.OK, MessageBoxImage.Information);
+            ? PluginStrings.Tf("Editor.Msg.AssociatedDone", name)
+            : PluginStrings.Tf("Editor.Msg.CreatedDone", name);
+        MessageBox.Show(this, doneMsg, PluginStrings.T("Editor.Title"), MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void ExportParameterPackButton_Click(object sender, RoutedEventArgs e)
@@ -146,7 +164,7 @@ public partial class TeamParametersEditorWindow : Window
         var selected = ParametersDataGrid.SelectedItems.Cast<object>().OfType<TeamParameterRowModel>().ToList();
         if (selected.Count == 0)
         {
-            MessageBox.Show(this, "Seleccione pelo menos um parâmetro na grelha para exportar.", "Exportar JSON",
+            MessageBox.Show(this, PluginStrings.T("Export.Msg.SelectAtLeastOne"), PluginStrings.T("Export.Title"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -155,17 +173,17 @@ public partial class TeamParametersEditorWindow : Window
         if (!TeamParameterPortablePackService.TryBuildPackFromParameterNames(_uidoc.Document, names, out var pack,
                 out var buildError))
         {
-            MessageBox.Show(this, buildError, "Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, buildError, PluginStrings.T("Export.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         var dlg = new SaveFileDialog
         {
-            Title = "Guardar pacote de parâmetros",
-            Filter = "JSON (*.json)|*.json|Todos os ficheiros (*.*)|*.*",
+            Title = PluginStrings.T("Export.Dialog.SaveTitle"),
+            Filter = PluginStrings.T("Export.Dialog.Filter"),
             DefaultExt = ".json",
             AddExtension = true,
-            FileName = "ParametrosEquipa.json"
+            FileName = PluginStrings.T("Export.Dialog.DefaultFileName")
         };
 
         if (dlg.ShowDialog(this) != true)
@@ -173,13 +191,13 @@ public partial class TeamParametersEditorWindow : Window
 
         if (!TeamParameterPortablePackService.TryWritePackToPath(pack, dlg.FileName, out var writeError))
         {
-            MessageBox.Show(this, writeError, "Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, writeError, PluginStrings.T("Export.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         MessageBox.Show(this,
-            $"Foram exportadas {pack.Definitions.Count} definição(ões) para:\n{dlg.FileName}",
-            "Exportar JSON",
+            PluginStrings.Tf("Export.Msg.ExportWritten", pack.Definitions.Count, dlg.FileName),
+            PluginStrings.T("Export.Title"),
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
@@ -189,15 +207,15 @@ public partial class TeamParametersEditorWindow : Window
         var elements = ResolveElements();
         if (elements.Count == 0)
         {
-            MessageBox.Show(this, "Não há elementos válidos na selecção — não é possível determinar categorias para o binding.",
-                "Importar JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, PluginStrings.T("Import.Msg.NoValidSelection"),
+                PluginStrings.T("Import.Title"), MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         var dlg = new OpenFileDialog
         {
-            Title = "Carregar pacote de parâmetros",
-            Filter = "JSON (*.json)|*.json|Todos os ficheiros (*.*)|*.*",
+            Title = PluginStrings.T("Import.Dialog.OpenTitle"),
+            Filter = PluginStrings.T("Export.Dialog.Filter"),
             CheckFileExists = true,
             Multiselect = false
         };
@@ -208,20 +226,21 @@ public partial class TeamParametersEditorWindow : Window
         if (!TeamParameterPortablePackService.TryReadPackFromPath(dlg.FileName, out var pack, out var readError) ||
             pack is null)
         {
-            MessageBox.Show(this, readError, "Importar JSON", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, PluginStrings.Tf("Import.Msg.ReadError", readError), PluginStrings.T("Import.Title"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (!TeamParameterPortablePackService.TryImportPack(_uidoc.Document, pack, elements, out var summary))
         {
-            MessageBox.Show(this, summary, "Importar JSON", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, summary, PluginStrings.T("Import.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         RefreshRows();
         MessageBox.Show(this,
-            string.IsNullOrWhiteSpace(summary) ? "Importação concluída." : summary,
-            "Importar JSON",
+            string.IsNullOrWhiteSpace(summary) ? PluginStrings.T("Import.Msg.Done") : summary,
+            PluginStrings.T("Import.Title"),
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
@@ -231,8 +250,8 @@ public partial class TeamParametersEditorWindow : Window
         var elements = ResolveElements();
         if (elements.Count == 0)
         {
-            MessageBox.Show(this, "Não há elementos válidos na selecção.", "Assistente de parâmetros", MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            MessageBox.Show(this, PluginStrings.T("Report.Msg.NoValidElements"), PluginStrings.T("Editor.Title"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -244,11 +263,13 @@ public partial class TeamParametersEditorWindow : Window
         var result = new DocumentationOrchestrator().Run(_uidoc.Document, _uidoc.ActiveView, elements, options);
         if (!result.Success)
         {
-            MessageBox.Show(this, result.Message, "Relatório", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(this, result.Message, PluginStrings.T("Report.Title"), MessageBoxButton.OK,
+                MessageBoxImage.Warning);
             return;
         }
 
-        MessageBox.Show(this, result.Message, "Relatório", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(this, result.Message, PluginStrings.T("Report.Title"), MessageBoxButton.OK,
+            MessageBoxImage.Information);
     }
 
     private void EditParameterButton_Click(object sender, RoutedEventArgs e)
@@ -267,8 +288,7 @@ public partial class TeamParametersEditorWindow : Window
         var needsMerge = dlg.ExtendCategoriesFromEditorSelection && elements.Count > 0;
         if (!nameOrKindChanged && !needsMerge)
         {
-            MessageBox.Show(this, "Nada a alterar: indique um nome novo, outro tipo de dados ou marque + categorias.",
-                "Editar parâmetro",
+            MessageBox.Show(this, PluginStrings.T("Edit.Msg.NothingToChange"), PluginStrings.T("Edit.Title"),
                 MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
@@ -280,8 +300,8 @@ public partial class TeamParametersEditorWindow : Window
             {
                 MessageBox.Show(
                     this,
-                    $"O nome «{dlg.NewName}» já existe no ficheiro partilhado com outro tipo de dados. Escolha outro nome.",
-                    "Editar parâmetro",
+                    PluginStrings.Tf("Edit.Msg.NewNameExistsWrongKind", dlg.NewName),
+                    PluginStrings.T("Edit.Title"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
@@ -300,11 +320,9 @@ public partial class TeamParametersEditorWindow : Window
             if (affected.Count > 0 && !allWithinSelection)
             {
                 var r = MessageBox.Show(
-                    "Este parâmetro está associado a instâncias nas categorias ligadas que não estão na selecção actual do assistente.\n\n" +
-                    "Sim — alterar o tipo em todo o projecto: os valores nas instâncias fora da selecção serão limpos.\n" +
-                    "Não — criar um parâmetro novo só para os elementos seleccionados (será pedido um nome); os outros elementos mantêm o parâmetro original.\n" +
-                    "Cancelar — não fazer alterações.",
-                    "Alterar tipo de dados",
+                    this,
+                    PluginStrings.T("Edit.Msg.KindChange.Body"),
+                    PluginStrings.T("Edit.Msg.KindChange.Title"),
                     MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Warning,
                     MessageBoxResult.Cancel);
@@ -314,8 +332,8 @@ public partial class TeamParametersEditorWindow : Window
 
                 if (r == MessageBoxResult.No)
                 {
-                    var forkName = PromptDialog.Show(this, "Novo parâmetro na selecção",
-                        "Nome do novo parâmetro (só os elementos seleccionados recebem cópia e limpeza do original):",
+                    var forkName = PromptDialog.Show(this, PluginStrings.T("Edit.ForkDialog.Title"),
+                        PluginStrings.T("Edit.ForkDialog.Prompt"),
                         $"{dlg.OriginalName} (sel)");
                     if (string.IsNullOrWhiteSpace(forkName))
                         return;
@@ -324,8 +342,8 @@ public partial class TeamParametersEditorWindow : Window
                         !TeamParameterSharedFileKindMapper.TokenMatchesKind(forkTok, dlg.SelectedKind))
                     {
                         MessageBox.Show(this,
-                            $"O nome «{forkName}» já existe no ficheiro partilhado com outro tipo de dados.",
-                            "Editar parâmetro",
+                            PluginStrings.Tf("Edit.Msg.ForkNameWrongKind", forkName),
+                            PluginStrings.T("Edit.Title"),
                             MessageBoxButton.OK,
                             MessageBoxImage.Warning);
                         return;
@@ -333,7 +351,7 @@ public partial class TeamParametersEditorWindow : Window
 
                     try
                     {
-                        using var tx = new Transaction(doc, "Assistente de parâmetros: fork parâmetro");
+                        using var tx = new Transaction(doc, PluginStrings.T("Tx.TxForkParameter"));
                         tx.Start();
                         TeamParameterMaintenanceService.ForkTeamParameterForSelection(doc, dlg.OriginalName, forkName,
                             dlg.SelectedKind, elements);
@@ -341,14 +359,15 @@ public partial class TeamParametersEditorWindow : Window
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show(this, ex.Message, "Editar parâmetro", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(this, ex.Message, PluginStrings.T("Edit.Title"), MessageBoxButton.OK,
+                            MessageBoxImage.Error);
                         return;
                     }
 
                     RefreshRows();
                     MessageBox.Show(this,
-                        $"Foi criado «{forkName}» na selecção; os valores foram copiados e o parâmetro original foi limpo nesses elementos.",
-                        "Assistente de parâmetros",
+                        PluginStrings.Tf("Edit.Msg.ForkDone", forkName),
+                        PluginStrings.T("Editor.Title"),
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                     return;
@@ -364,7 +383,7 @@ public partial class TeamParametersEditorWindow : Window
 
         try
         {
-            using var tx = new Transaction(doc, "Assistente de parâmetros: editar parâmetro");
+            using var tx = new Transaction(doc, PluginStrings.T("Tx.TxEditParameter"));
             tx.Start();
 
             var nameAfter = row.ParameterName;
@@ -382,13 +401,13 @@ public partial class TeamParametersEditorWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Editar parâmetro", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, ex.Message, PluginStrings.T("Edit.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         RefreshRows();
-        MessageBox.Show(this, "Parâmetro actualizado.", "Assistente de parâmetros", MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        MessageBox.Show(this, PluginStrings.T("Editor.Msg.ParameterUpdated"), PluginStrings.T("Editor.Title"),
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void DeleteParameterButton_Click(object sender, RoutedEventArgs e)
@@ -398,8 +417,8 @@ public partial class TeamParametersEditorWindow : Window
 
         var r = MessageBox.Show(
             this,
-            $"Remover o parâmetro «{row.ParameterName}» do projecto? Os valores nas instâncias deixarão de estar disponíveis por este parâmetro.",
-            "Eliminar parâmetro",
+            PluginStrings.Tf("Delete.Confirm", row.ParameterName),
+            PluginStrings.T("Delete.Title"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning,
             MessageBoxResult.No);
@@ -409,20 +428,20 @@ public partial class TeamParametersEditorWindow : Window
 
         try
         {
-            using var tx = new Transaction(_uidoc.Document, "Assistente de parâmetros: eliminar parâmetro");
+            using var tx = new Transaction(_uidoc.Document, PluginStrings.T("Tx.TxDeleteParameter"));
             tx.Start();
             TeamParameterMaintenanceService.RemoveFromProject(_uidoc.Document, row.ParameterName);
             tx.Commit();
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Eliminar parâmetro", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, ex.Message, PluginStrings.T("Delete.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         RefreshRows();
-        MessageBox.Show(this, "Parâmetro removido do projecto.", "Assistente de parâmetros", MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        MessageBox.Show(this, PluginStrings.T("Editor.Msg.RemovedFromProject"), PluginStrings.T("Editor.Title"),
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void ApplyButton_Click(object sender, RoutedEventArgs e)
@@ -430,26 +449,22 @@ public partial class TeamParametersEditorWindow : Window
         var elements = ResolveElements();
         if (elements.Count == 0)
         {
-            MessageBox.Show(this, "Não há elementos válidos.", "Assistente de parâmetros", MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            MessageBox.Show(this, PluginStrings.T("Apply.Msg.NoValidElements"), PluginStrings.T("Editor.Title"),
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (Rows.Count == 0)
         {
-            MessageBox.Show(
-                this,
-                "Não há parâmetros para aplicar. Crie primeiro um parâmetro ou seleccione elementos que partilhem os mesmos parâmetros no projecto.",
-                "Assistente de parâmetros",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            MessageBox.Show(this, PluginStrings.T("Apply.Msg.NoParameters"), PluginStrings.T("Editor.Title"),
+                MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         var errors = new StringBuilder();
         try
         {
-            using var tx = new Transaction(_uidoc.Document, "Assistente de parâmetros: aplicar valores");
+            using var tx = new Transaction(_uidoc.Document, PluginStrings.T("Tx.TxApplyValues"));
             tx.Start();
 
             foreach (var row in Rows)
@@ -466,8 +481,8 @@ public partial class TeamParametersEditorWindow : Window
                 tx.RollBack();
                 MessageBox.Show(
                     this,
-                    "Não foi possível aplicar todos os valores:\n\n" + errors,
-                    "Assistente de parâmetros",
+                    PluginStrings.Tf("Apply.Msg.PartialErrors", errors),
+                    PluginStrings.T("Editor.Title"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
@@ -477,13 +492,13 @@ public partial class TeamParametersEditorWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Assistente de parâmetros", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(this, ex.Message, PluginStrings.T("Editor.Title"), MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
         RefreshRows();
-        MessageBox.Show(this, "Valores aplicados com sucesso.", "Assistente de parâmetros", MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        MessageBox.Show(this, PluginStrings.T("Apply.Msg.Success"), PluginStrings.T("Editor.Title"),
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();

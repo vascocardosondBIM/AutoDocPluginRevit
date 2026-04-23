@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Autodesk.Revit.DB;
+using AutoDocumentation.Services;
 
 namespace AutoDocumentation.Models;
 
@@ -39,11 +40,11 @@ public sealed class TeamParameterRowModel : INotifyPropertyChanged
 
     public string KindDisplay => Kind switch
     {
-        TeamParameterKind.YesNo => "Sim / Não",
-        TeamParameterKind.Text => "Texto",
-        TeamParameterKind.Integer => "Número inteiro",
-        TeamParameterKind.DecimalNumber => "Número decimal",
-        TeamParameterKind.Length => "Comprimento (m)",
+        TeamParameterKind.YesNo => PluginStrings.T("Kind.YesNo"),
+        TeamParameterKind.Text => PluginStrings.T("Kind.Text"),
+        TeamParameterKind.Integer => PluginStrings.T("Kind.Integer"),
+        TeamParameterKind.DecimalNumber => PluginStrings.T("Kind.Decimal"),
+        TeamParameterKind.Length => PluginStrings.T("Kind.Length"),
         _ => Kind.ToString()
     };
 

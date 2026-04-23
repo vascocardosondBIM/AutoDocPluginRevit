@@ -1,3 +1,5 @@
+using AutoDocumentation.Services;
+
 namespace AutoDocumentation.Models;
 
 /// <summary>
@@ -15,16 +17,16 @@ public sealed class AssociableTeamParameterInfo
 
     public TeamParameterKind Kind { get; }
 
-    public string DisplayLine => $"{Name} ({DescribeKindPortuguese(Kind)})";
+    public string DisplayLine => $"{Name} ({DescribeKind(Kind)})";
 
-    private static string DescribeKindPortuguese(TeamParameterKind k) =>
+    private static string DescribeKind(TeamParameterKind k) =>
         k switch
         {
-            TeamParameterKind.YesNo => "Sim / Não",
-            TeamParameterKind.Text => "Texto",
-            TeamParameterKind.Integer => "Número inteiro",
-            TeamParameterKind.DecimalNumber => "Número decimal",
-            TeamParameterKind.Length => "Comprimento",
+            TeamParameterKind.YesNo => PluginStrings.T("Kind.YesNo"),
+            TeamParameterKind.Text => PluginStrings.T("Kind.Text"),
+            TeamParameterKind.Integer => PluginStrings.T("Kind.Integer"),
+            TeamParameterKind.DecimalNumber => PluginStrings.T("Kind.Decimal"),
+            TeamParameterKind.Length => PluginStrings.T("Kind.LengthShort"),
             _ => k.ToString()
         };
 }

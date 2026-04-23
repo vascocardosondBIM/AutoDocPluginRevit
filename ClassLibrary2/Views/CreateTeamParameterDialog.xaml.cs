@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using AutoDocumentation.Models;
+using AutoDocumentation.Services;
 
 namespace AutoDocumentation.Views;
 
@@ -23,35 +24,35 @@ public partial class CreateTeamParameterDialog : Window
 
     public CreateTeamParameterDialog(IReadOnlyList<AssociableTeamParameterInfo>? associableParameters = null)
     {
-        InitializeComponent();
         _associable = associableParameters ?? System.Array.Empty<AssociableTeamParameterInfo>();
+        InitializeComponent();
+        RevitWpfAppearance.Apply(this);
+        ApplyLocalizedChrome();
 
-        // Popular combos antes de qualquer lógica de modo: o XAML dispara Checked dos rádios durante
-        // InitializeComponent; se aí se alterar visibilidade do KindComboBox vazio, o WPF pode rebentar (NRE).
         KindComboBox.Items.Add(new ComboBoxItem
         {
-            Content = "Sim / Não",
+            Content = PluginStrings.T("Kind.YesNo"),
             Tag = TeamParameterKind.YesNo
         });
         KindComboBox.Items.Add(new ComboBoxItem
         {
-            Content = "Texto",
+            Content = PluginStrings.T("Kind.Text"),
             Tag = TeamParameterKind.Text,
             IsSelected = true
         });
         KindComboBox.Items.Add(new ComboBoxItem
         {
-            Content = "Número inteiro",
+            Content = PluginStrings.T("Kind.Integer"),
             Tag = TeamParameterKind.Integer
         });
         KindComboBox.Items.Add(new ComboBoxItem
         {
-            Content = "Número decimal",
+            Content = PluginStrings.T("Kind.Decimal"),
             Tag = TeamParameterKind.DecimalNumber
         });
         KindComboBox.Items.Add(new ComboBoxItem
         {
-            Content = "Comprimento (metros na grelha)",
+            Content = PluginStrings.T("Kind.LengthVerbose"),
             Tag = TeamParameterKind.Length
         });
 
@@ -67,8 +68,7 @@ public partial class CreateTeamParameterDialog : Window
         if (_associable.Count == 0)
         {
             ModeAssociateRadio.IsEnabled = false;
-            ModeAssociateRadio.ToolTip =
-                "Não há parâmetros da equipa por associar: todos os geridos já aparecem na grelha para esta selecção.";
+            ModeAssociateRadio.ToolTip = PluginStrings.T("Create.Tooltip.NoAssociable");
         }
         else
             AssociateComboBox.SelectedIndex = 0;
@@ -78,6 +78,16 @@ public partial class CreateTeamParameterDialog : Window
         ApplyModeVisuals();
     }
 
+    private void ApplyLocalizedChrome()
+    {
+        Title = PluginStrings.T("Create.Title");
+        ModeCreateRadio.Content = PluginStrings.T("Create.Mode.CreateNew");
+        ModeAssociateRadio.Content = PluginStrings.T("Create.Mode.AssociateExisting");
+        KindLabel.Text = PluginStrings.T("Create.Label.Kind");
+        CancelButton.Content = PluginStrings.T("Common.Btn.Cancel");
+        OkButton.Content = PluginStrings.T("Common.Btn.OK");
+    }
+
     private void ApplyModeVisuals()
     {
         var associate = ModeAssociateRadio.IsChecked == true;
@@ -85,10 +95,12 @@ public partial class CreateTeamParameterDialog : Window
         AssociateComboBox.Visibility = associate ? Visibility.Visible : Visibility.Collapsed;
         KindLabel.Visibility = associate ? Visibility.Collapsed : Visibility.Visible;
         KindComboBox.Visibility = associate ? Visibility.Collapsed : Visibility.Visible;
-        PrimaryFieldLabel.Text = associate ? "Parâmetro existente" : "Nome do parâmetro";
+        PrimaryFieldLabel.Text = associate
+            ? PluginStrings.T("Create.Label.ExistingParameter")
+            : PluginStrings.T("Create.Label.ParameterName");
         HelpTextBlock.Text = associate
-            ? "Serão acrescentadas no projecto as categorias dos elementos seleccionados a este parâmetro (instância). Os valores já existentes noutras categorias mantêm-se."
-            : "O parâmetro será associado como instância às categorias dos elementos que seleccionou antes de abrir o editor. Comprimento assume metros na grelha.";
+            ? PluginStrings.T("Create.Help.Associate")
+            : PluginStrings.T("Create.Help.Create");
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e)
@@ -97,8 +109,8 @@ public partial class CreateTeamParameterDialog : Window
         {
             if (SelectedAssociable is null)
             {
-                MessageBox.Show(this, "Seleccione um parâmetro da lista.", "Novo parâmetro", MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show(this, PluginStrings.T("Create.Msg.SelectFromList"), PluginStrings.T("Create.Title"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
         }
@@ -107,8 +119,8 @@ public partial class CreateTeamParameterDialog : Window
             var name = ParameterName.Trim();
             if (name.Length == 0)
             {
-                MessageBox.Show(this, "Indique um nome para o parâmetro.", "Novo parâmetro", MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
+                MessageBox.Show(this, PluginStrings.T("Create.Msg.ProvideName"), PluginStrings.T("Create.Title"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
         }

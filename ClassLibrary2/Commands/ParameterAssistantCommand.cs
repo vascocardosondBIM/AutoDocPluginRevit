@@ -3,6 +3,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using AutoDocumentation.Services;
 using AutoDocumentation.Views;
 
 namespace AutoDocumentation.Commands;
@@ -17,6 +18,7 @@ public sealed class ParameterAssistantCommand : IExternalCommand
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         var uiApp = commandData.Application;
+        PluginStrings.Initialize(uiApp.Application.Language);
         var uidoc = uiApp.ActiveUIDocument;
         var doc = uidoc.Document;
 
@@ -32,12 +34,12 @@ public sealed class ParameterAssistantCommand : IExternalCommand
 
         if (selection.Count == 0)
         {
-            message = "É necessário seleccionar pelo menos um elemento.";
-            TaskDialog.Show("Assistente de parâmetros", message);
+            message = PluginStrings.T("Cmd.ErrSelectElements");
+            TaskDialog.Show(PluginStrings.T("Cmd.CmdTitle"), message);
             return Result.Failed;
         }
 
-        var window = new TeamParametersEditorWindow(uidoc, selection);
+        var window = new TeamParametersEditorWindow(uidoc, selection, uiApp);
         _ = new WindowInteropHelper(window) { Owner = uiApp.MainWindowHandle };
         window.ShowDialog();
         return Result.Succeeded;
@@ -59,7 +61,7 @@ public sealed class ParameterAssistantCommand : IExternalCommand
         var refs = uidoc.Selection.PickObjects(
             ObjectType.Element,
             new ModelElementSelectionFilter(),
-            "Seleccione elementos (parâmetros em comum por categoria).");
+            PluginStrings.T("Cmd.PickPrompt"));
 
         var list = new List<Element>();
         var seen = new HashSet<long>();

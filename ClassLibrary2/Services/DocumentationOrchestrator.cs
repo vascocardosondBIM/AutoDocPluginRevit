@@ -11,16 +11,16 @@ public sealed class DocumentationOrchestrator
     public DocumentationRunResult Run(Document doc, View view, IReadOnlyList<Element> selection, DocumentationRunOptions options)
     {
         if (view.IsTemplate)
-            return DocumentationRunResult.Fail("A vista ativa não pode ser um template.");
+            return DocumentationRunResult.Fail(PluginStrings.T("Doc.Err.ViewTemplate"));
 
         if (selection.Count == 0)
-            return DocumentationRunResult.Fail("Não há elementos seleccionados.");
+            return DocumentationRunResult.Fail(PluginStrings.T("Doc.Err.NoSelection"));
 
         var reportParamName = ElementDocumentationConstants.ReportParameterName;
 
         var reportsWritten = 0;
 
-        using var tx = new Transaction(doc, "Auto-documentação: relatório");
+        using var tx = new Transaction(doc, PluginStrings.T("Tx.AutoDocReport"));
         tx.Start();
 
         try
@@ -34,7 +34,7 @@ public sealed class DocumentationOrchestrator
         {
             tx.RollBack();
             return DocumentationRunResult.Fail(
-                $"Não foi possível criar ou associar o parâmetro partilhado «{reportParamName}»: {ex.Message}");
+                PluginStrings.Tf("Doc.Err.CreateParamFail", reportParamName, ex.Message));
         }
 
         foreach (var e in selection)
@@ -43,7 +43,7 @@ public sealed class DocumentationOrchestrator
             {
                 tx.RollBack();
                 return DocumentationRunResult.Fail(
-                    $"Parâmetro «{reportParamName}»: {reason} (elemento Id {e.Id.Value}).");
+                    PluginStrings.Tf("Doc.Err.CannotWrite", reportParamName, reason, e.Id.Value));
             }
         }
 
@@ -58,14 +58,12 @@ public sealed class DocumentationOrchestrator
         if (reportsWritten == 0)
         {
             tx.RollBack();
-            return DocumentationRunResult.Fail(
-                "Não foi possível gravar relatórios. Verifique a selecção e os parâmetros dos elementos.");
+            return DocumentationRunResult.Fail(PluginStrings.T("Doc.Err.NoReportsWritten"));
         }
 
         tx.Commit();
 
-        var message =
-            $"Elementos seleccionados: {selection.Count}. Relatórios gravados: {reportsWritten}.";
+        var message = PluginStrings.Tf("Doc.Ok.Summary", selection.Count, reportsWritten);
         return DocumentationRunResult.Ok(message, selection.Count, reportsWritten);
     }
 }
